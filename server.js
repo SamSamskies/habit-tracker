@@ -1,8 +1,19 @@
 const express = require('express');
-const { initDb, getWord, setWord, DEFAULT_DB_PATH } = require('./db');
+const { initDb, getWord, setWord, createHabit, DEFAULT_DB_PATH } = require('./db');
 
 function createApp(db) {
   const app = express();
+  app.use(express.json());
+
+  app.post('/habits', (req, res) => {
+    const name = req.body?.name;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+
+    const habit = createHabit(db, name.trim());
+    res.status(201).json(habit);
+  });
 
   app.get('/hello', (req, res) => {
     const word = getWord(db);

@@ -10,10 +10,21 @@ function initDb(dbPath = DEFAULT_DB_PATH) {
     CREATE TABLE IF NOT EXISTS config (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS habits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   return db;
+}
+
+function createHabit(db, name) {
+  const result = db.prepare('INSERT INTO habits (name) VALUES (?)').run(name);
+  return db.prepare('SELECT id, name, created_at FROM habits WHERE id = ?').get(result.lastInsertRowid);
 }
 
 function getWord(db) {
@@ -28,4 +39,4 @@ function setWord(db, word) {
   `).run(word);
 }
 
-module.exports = { initDb, getWord, setWord, DEFAULT_DB_PATH };
+module.exports = { initDb, getWord, setWord, createHabit, DEFAULT_DB_PATH };
