@@ -3,7 +3,7 @@ name: Habit Tracker Prototype
 overview: Build a personal habit tracker as a small Node + SQLite backend serving a zero-build vanilla HTML/CSS/JS frontend, supporting adding habits, daily check-offs, current streaks, and a 7-day history view.
 todos:
   - id: scaffold
-    content: Create package.json with express + better-sqlite3 and a start script, plus .gitignore
+    content: Create package.json with express and a start script, plus .gitignore (SQLite via built-in node:sqlite)
     status: pending
   - id: backend
     content: "Write server.js: SQLite setup (habits, completions tables), 4 REST routes, static serving of public/, and server-side streak + last-7-days computation"
@@ -25,7 +25,7 @@ isProject: false
 A minimal full-stack app: a tiny Node/Express server with a SQLite database exposes a small REST API, and a single static `index.html` (with inline CSS/JS) renders the UI. No frontend build step.
 
 ## Stack
-- Backend: Node + [Express](https://expressjs.com/) + [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) (synchronous, zero-config, file-based DB)
+- Backend: Node + [Express](https://expressjs.com/) + [`node:sqlite`](https://nodejs.org/api/sqlite.html) (`DatabaseSync` — built-in, synchronous, file-based DB; no extra npm dep)
 - Frontend: one `public/index.html` with inline CSS and vanilla JS using `fetch`
 - DB file: `habits.db` (gitignored)
 
@@ -52,7 +52,7 @@ Streaks and history are derived from `completions` rows (no extra columns needed
 `currentStreak` = count of consecutive days with a completion ending today (or yesterday if today not yet done), computed server-side from `completions` for that habit.
 
 ## Files to create
-- `package.json` - deps (`express`, `better-sqlite3`), `start` script
+- `package.json` - deps (`express` only; SQLite via `node:sqlite`), `start` script
 - `server.js` - Express app, SQLite setup, the 4 routes, serves `public/`
 - `db.js` - opens DB, creates tables if missing (or inline in `server.js` to stay thin)
 - `public/index.html` - full UI (HTML + inline `<style>` + inline `<script>`)
