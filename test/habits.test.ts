@@ -1,17 +1,18 @@
-const { describe, it, before, after } = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { randomUUID } = require('node:crypto');
-const { startServer } = require('../server');
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import type { Habit } from '../db.ts';
+import { startServer } from '../server.ts';
 
 describe('POST /habits', () => {
-  let dbPath;
-  let server;
-  let db;
-  let port;
-  let baseUrl;
+  let dbPath: string;
+  let server: Awaited<ReturnType<typeof startServer>>['server'];
+  let db: Awaited<ReturnType<typeof startServer>>['db'];
+  let port: number;
+  let baseUrl: string;
 
   before(async () => {
     dbPath = path.join(os.tmpdir(), `habit-tracker-post-habits-${randomUUID()}.db`);
@@ -34,12 +35,12 @@ describe('POST /habits', () => {
 
     assert.equal(response.status, 201);
 
-    const habit = await response.json();
+    const habit = (await response.json()) as Habit;
     assert.equal(habit.name, 'Exercise');
     assert.equal(typeof habit.id, 'number');
     assert.equal(typeof habit.created_at, 'string');
 
-    const row = db.prepare('SELECT id, name, created_at FROM habits WHERE id = ?').get(habit.id);
+    const row = db.prepare('SELECT id, name, created_at FROM habits WHERE id = ?').get(habit.id) as Habit;
     assert.equal(row.id, habit.id);
     assert.equal(row.name, habit.name);
     assert.equal(row.created_at, habit.created_at);

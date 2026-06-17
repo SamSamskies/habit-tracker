@@ -1,17 +1,17 @@
-const { describe, it, before, after } = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { initDb, setWord } = require('../db');
-const { startServer } = require('../server');
+import { describe, it, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { initDb, setWord } from '../db.ts';
+import { startServer } from '../server.ts';
 
 describe('GET /hello', () => {
-  let dbPath;
-  let server;
-  let db;
-  let port;
-  let baseUrl;
+  let dbPath: string;
+  let server: Awaited<ReturnType<typeof startServer>>['server'];
+  let db: Awaited<ReturnType<typeof startServer>>['db'];
+  let port: number;
+  let baseUrl: string;
 
   before(async () => {
     dbPath = path.join(os.tmpdir(), `habit-tracker-test-${Date.now()}.db`);
