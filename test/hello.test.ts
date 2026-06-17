@@ -9,24 +9,24 @@ import { startServer } from '../server.ts';
 describe('GET /hello', () => {
   let dbPath: string;
   let server: Awaited<ReturnType<typeof startServer>>['server'];
-  let db: Awaited<ReturnType<typeof startServer>>['db'];
+  let client: Awaited<ReturnType<typeof startServer>>['client'];
   let port: number;
   let baseUrl: string;
 
   before(async () => {
     dbPath = path.join(os.tmpdir(), `habit-tracker-test-${Date.now()}.db`);
 
-    const seedDb = initDb(dbPath);
+    const { client: seedClient, db: seedDb } = initDb(dbPath);
     setWord(seedDb, 'world');
-    seedDb.close();
+    seedClient.close();
 
-    ({ server, db, port } = await startServer({ dbPath, port: 0 }));
+    ({ server, client, port } = await startServer({ dbPath, port: 0 }));
     baseUrl = `http://127.0.0.1:${port}`;
   });
 
   after(() => {
     server.close();
-    db.close();
+    client.close();
     fs.unlinkSync(dbPath);
   });
 

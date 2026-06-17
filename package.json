@@ -5,13 +5,18 @@
   "type": "module",
   "scripts": {
     "start": "node --experimental-strip-types server.ts",
-    "test": "node --experimental-strip-types --test test/*.test.ts"
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "drizzle-orm": "^0.45.2",
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.9.3"
+    "@types/node": "^25.9.3",
+    "drizzle-kit": "^0.31.10"
   }
 }

@@ -3,10 +3,10 @@ name: Habit Tracker Prototype
 overview: Build a personal habit tracker as a small Node + TypeScript + SQLite backend serving a zero-build vanilla HTML/CSS/JS frontend, supporting adding habits, daily check-offs, current streaks, and a 7-day history view.
 todos:
   - id: scaffold
-    content: Create package.json with express and start/test scripts (Node --experimental-strip-types), plus .gitignore (SQLite via built-in node:sqlite)
+    content: Create package.json with express, drizzle-orm, and better-sqlite3; start/test scripts (Node --experimental-strip-types); plus .gitignore
     status: pending
   - id: backend
-    content: "Write server.ts: SQLite setup (habits, completions tables), 4 REST routes, static serving of public/, and server-side streak + last-7-days computation"
+    content: "Write server.ts: Drizzle/SQLite setup (habits, completions tables), 4 REST routes, static serving of public/, and server-side streak + last-7-days computation"
     status: pending
   - id: frontend
     content: "Build public/index.html with inline CSS/JS: add-habit form, habit list with today toggle, streak display, and clickable 7-day history grid"
@@ -25,12 +25,12 @@ isProject: false
 A minimal full-stack app: a tiny Node/TypeScript/Express server with a SQLite database exposes a small REST API, and a single static `index.html` (with inline CSS/JS) renders the UI. No frontend build step or extra TypeScript tooling.
 
 ## Stack
-- Backend: Node v26+ + TypeScript (via `--experimental-strip-types`, no `tsc`/tsx dep) + [Express](https://expressjs.com/) + [`node:sqlite`](https://nodejs.org/api/sqlite.html) (`DatabaseSync` — built-in, synchronous, file-based DB; no extra npm dep)
+- Backend: Node v26+ + TypeScript (via `--experimental-strip-types`, no `tsc`/tsx dep) + [Express](https://expressjs.com/) + [Drizzle ORM](https://orm.drizzle.team/) + [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) (synchronous, file-based SQLite driver)
 - Frontend: one `public/index.html` with inline CSS and vanilla JS using `fetch`
 - DB file: `habits.db` (gitignored)
 
 ## Data model
-Two tables in SQLite:
+Two tables in SQLite (defined in `schema.ts`):
 - `habits`: `id`, `name`, `created_at`
 - `completions`: `id`, `habit_id`, `date` (YYYY-MM-DD), unique on `(habit_id, date)`
 
@@ -52,10 +52,11 @@ Streaks and history are derived from `completions` rows (no extra columns needed
 `currentStreak` = count of consecutive days with a completion ending today (or yesterday if today not yet done), computed server-side from `completions` for that habit.
 
 ## Files to create
-- `package.json` - deps (`express` only; SQLite via `node:sqlite`), `start`/`test` scripts using `node --experimental-strip-types`
+- `package.json` - deps (`express`, `drizzle-orm`, `better-sqlite3`), `start`/`test` scripts using `node --experimental-strip-types`
 - `tsconfig.json` - TypeScript config for editor/type-checking (no compile step; Node runs `.ts` directly)
-- `server.ts` - Express app, SQLite setup, the 4 routes, serves `public/`
-- `db.ts` - opens DB, creates tables if missing (or inline in `server.ts` to stay thin)
+- `schema.ts` - Drizzle table definitions (`habits`, `completions`)
+- `db.ts` - opens DB, creates tables if missing, Drizzle query helpers
+- `server.ts` - Express app, the 4 routes, serves `public/`
 - `public/index.html` - full UI (HTML + inline `<style>` + inline `<script>`)
 - `.gitignore` - `node_modules/`, `habits.db`
 - `README.md` - run instructions (`npm install`, `npm start`, open `http://localhost:3000`)

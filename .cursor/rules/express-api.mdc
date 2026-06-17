@@ -3,7 +3,7 @@ description: Express + SQLite API conventions for this project
 alwaysApply: true
 ---
 
-- Express server; sqlite3 for persistence (no ORM unless I ask)
+- Express server; SQLite via `better-sqlite3` + Drizzle ORM (schema in `schema.ts`, queries in `db.ts`)
 - Seed test data in tests, not in production startup
 - Every new endpoint ships with an npm test that hits it
 - Run `npm test` as the done-when check before accepting a diff

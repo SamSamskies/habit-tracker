@@ -1,10 +1,17 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import type { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
-import { initDb, getWord, setWord, createHabit, DEFAULT_DB_PATH } from './db.ts';
+import {
+  initDb,
+  getWord,
+  setWord,
+  createHabit,
+  DEFAULT_DB_PATH,
+  type Db,
+  type DbConnection,
+} from './db.ts';
 
-export function createApp(db: DatabaseSync) {
+export function createApp(db: Db) {
   const app = express();
   app.use(express.json());
 
@@ -35,25 +42,26 @@ export function startServer({
   dbPath = DEFAULT_DB_PATH,
   port = process.env.PORT || 3000,
 }: StartServerOptions = {}) {
-  const db = initDb(dbPath);
+  const { client, db }: DbConnection = initDb(dbPath);
   const app = createApp(db);
 
   return new Promise<{
     server: ReturnType<ReturnType<typeof createApp>['listen']>;
     app: ReturnType<typeof createApp>;
-    db: DatabaseSync;
+    client: DbConnection['client'];
+    db: Db;
     port: number;
   }>((resolve) => {
     const server = app.listen(port, () => {
       const address = server.address();
       const resolvedPort = typeof address === 'object' && address ? address.port : Number(port);
-      resolve({ server, app, db, port: resolvedPort });
+      resolve({ server, app, client, db, port: resolvedPort });
     });
   });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const db = initDb();
+  const { db } = initDb();
   if (!getWord(db)) {
     setWord(db, 'world');
   }
