@@ -8,7 +8,7 @@ import type { Habit } from '../src/db.ts';
 import { getHabitById } from '../src/db.ts';
 import { startServer } from '../src/server.ts';
 
-describe('POST /habits', () => {
+describe('POST /api/habits', () => {
   let dbPath: string;
   let server: Awaited<ReturnType<typeof startServer>>['server'];
   let client: Awaited<ReturnType<typeof startServer>>['client'];
@@ -29,7 +29,7 @@ describe('POST /habits', () => {
   });
 
   it('creates a habit and returns it', async () => {
-    const response = await fetch(`${baseUrl}/habits`, {
+    const response = await fetch(`${baseUrl}/api/habits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'Exercise' }),
@@ -50,7 +50,7 @@ describe('POST /habits', () => {
   });
 
   it('returns 400 when name is missing', async () => {
-    const response = await fetch(`${baseUrl}/habits`, {
+    const response = await fetch(`${baseUrl}/api/habits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
@@ -60,7 +60,7 @@ describe('POST /habits', () => {
   });
 });
 
-describe('GET /habits', () => {
+describe('GET /api/habits', () => {
   let dbPath: string;
   let server: Awaited<ReturnType<typeof startServer>>['server'];
   let client: Awaited<ReturnType<typeof startServer>>['client'];
@@ -80,7 +80,7 @@ describe('GET /habits', () => {
   });
 
   it('returns an empty array when there are no habits', async () => {
-    const response = await fetch(`${baseUrl}/habits`);
+    const response = await fetch(`${baseUrl}/api/habits`);
 
     assert.equal(response.status, 200);
 
@@ -91,7 +91,7 @@ describe('GET /habits', () => {
   it('returns all habits as a JSON array', async () => {
     const created = await Promise.all(
       ['Exercise', 'Read'].map(async (name) => {
-        const response = await fetch(`${baseUrl}/habits`, {
+        const response = await fetch(`${baseUrl}/api/habits`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name }),
@@ -101,7 +101,7 @@ describe('GET /habits', () => {
       }),
     );
 
-    const response = await fetch(`${baseUrl}/habits`);
+    const response = await fetch(`${baseUrl}/api/habits`);
 
     assert.equal(response.status, 200);
 

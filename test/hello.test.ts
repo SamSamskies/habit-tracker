@@ -6,7 +6,7 @@ import path from 'node:path';
 import { initDb, setWord } from '../src/db.ts';
 import { startServer } from '../src/server.ts';
 
-describe('GET /hello', () => {
+describe('GET /api/hello', () => {
   let dbPath: string;
   let server: Awaited<ReturnType<typeof startServer>>['server'];
   let client: Awaited<ReturnType<typeof startServer>>['client'];
@@ -31,7 +31,7 @@ describe('GET /hello', () => {
   });
 
   it('returns hello with the word from the database', async () => {
-    const response = await fetch(`${baseUrl}/hello`);
+    const response = await fetch(`${baseUrl}/api/hello`);
     assert.equal(response.status, 200);
 
     const body = await response.text();

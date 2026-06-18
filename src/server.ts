@@ -16,11 +16,11 @@ export function createApp(db: Db) {
   const app = express();
   app.use(express.json());
 
-  app.get('/habits', (_req: Request, res: Response) => {
+  app.get('/api/habits', (_req: Request, res: Response) => {
     res.json(getHabits(db));
   });
 
-  app.post('/habits', (req: Request, res: Response) => {
+  app.post('/api/habits', (req: Request, res: Response) => {
     const name = req.body?.name;
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ error: 'name is required' });
@@ -30,7 +30,7 @@ export function createApp(db: Db) {
     res.status(201).json(habit);
   });
 
-  app.get('/hello', (_req: Request, res: Response) => {
+  app.get('/api/hello', (_req: Request, res: Response) => {
     const word = getWord(db);
     res.send(`hello ${word}`);
   });
