@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import type { Habit } from '../db.ts';
-import { getHabitById } from '../db.ts';
-import { startServer } from '../server.ts';
+import type { Habit } from '../src/db.ts';
+import { getHabitById } from '../src/db.ts';
+import { startServer } from '../src/server.ts';
 
 describe('POST /habits', () => {
   let dbPath: string;

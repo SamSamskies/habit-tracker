@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { initDb, setWord } from '../db.ts';
-import { startServer } from '../server.ts';
+import { initDb, setWord } from '../src/db.ts';
+import { startServer } from '../src/server.ts';
 
 describe('GET /hello', () => {
   let dbPath: string;
