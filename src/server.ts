@@ -6,6 +6,7 @@ import {
   getWord,
   setWord,
   createHabit,
+  getHabits,
   DEFAULT_DB_PATH,
   type Db,
   type DbConnection,
@@ -14,6 +15,10 @@ import {
 export function createApp(db: Db) {
   const app = express();
   app.use(express.json());
+
+  app.get('/habits', (_req: Request, res: Response) => {
+    res.json(getHabits(db));
+  });
 
   app.post('/habits', (req: Request, res: Response) => {
     const name = req.body?.name;

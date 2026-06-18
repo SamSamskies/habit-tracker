@@ -41,6 +41,10 @@ export function getHabitById(db: Db, id: number): Habit | undefined {
   return db.select().from(habits).where(eq(habits.id, id)).get();
 }
 
+export function getHabits(db: Db): Habit[] {
+  return db.select().from(habits).all();
+}
+
 export function getWord(db: Db): string | null {
   const row = db
     .select({ value: config.value })
