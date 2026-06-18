@@ -8,8 +8,3 @@ export const habits = sqliteTable('habits', {
     .notNull()
     .default(sql`(datetime('now'))`),
 });
-
-export const config = sqliteTable('config', {
-  key: text('key').primaryKey(),
-  value: text('value').notNull(),
-});

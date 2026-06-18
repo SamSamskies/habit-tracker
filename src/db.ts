@@ -5,7 +5,7 @@ import Database from 'better-sqlite3';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as schema from './schema.ts';
-import { config, habits } from './schema.ts';
+import { habits } from './schema.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_FOLDER = path.join(__dirname, '..', 'drizzle');
@@ -43,23 +43,4 @@ export function getHabitById(db: Db, id: number): Habit | undefined {
 
 export function getHabits(db: Db): Habit[] {
   return db.select().from(habits).all();
-}
-
-export function getWord(db: Db): string | null {
-  const row = db
-    .select({ value: config.value })
-    .from(config)
-    .where(eq(config.key, 'hello_word'))
-    .get();
-  return row?.value ?? null;
-}
-
-export function setWord(db: Db, word: string): void {
-  db.insert(config)
-    .values({ key: 'hello_word', value: word })
-    .onConflictDoUpdate({
-      target: config.key,
-      set: { value: word },
-    })
-    .run();
 }

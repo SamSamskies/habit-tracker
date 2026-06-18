@@ -3,8 +3,6 @@ import type { Request, Response } from 'express';
 import { fileURLToPath } from 'node:url';
 import {
   initDb,
-  getWord,
-  setWord,
   createHabit,
   getHabits,
   DEFAULT_DB_PATH,
@@ -28,11 +26,6 @@ export function createApp(db: Db) {
 
     const habit = createHabit(db, name.trim());
     res.status(201).json(habit);
-  });
-
-  app.get('/api/hello', (_req: Request, res: Response) => {
-    const word = getWord(db);
-    res.send(`hello ${word}`);
   });
 
   return app;
@@ -67,10 +60,6 @@ export function startServer({
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { db } = initDb();
-  if (!getWord(db)) {
-    setWord(db, 'world');
-  }
-
   const app = createApp(db);
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
