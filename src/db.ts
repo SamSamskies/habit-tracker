@@ -46,6 +46,19 @@ export function getHabitById(db: Db, id: number): Habit | undefined {
   return db.select().from(habits).where(eq(habits.id, id)).get();
 }
 
+export function getCompletionsForHabit(db: Db, habitId: number) {
+  return db
+    .select()
+    .from(completions)
+    .where(eq(completions.habit_id, habitId))
+    .all();
+}
+
+export function deleteHabit(db: Db, id: number): boolean {
+  const result = db.delete(habits).where(eq(habits.id, id)).run();
+  return result.changes > 0;
+}
+
 export function addCompletion(db: Db, habitId: number, date: string): void {
   db.insert(completions).values({ habit_id: habitId, date }).run();
 }

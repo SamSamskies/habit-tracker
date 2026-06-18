@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import {
   initDb,
   createHabit,
+  deleteHabit,
   getHabits,
   DEFAULT_DB_PATH,
   type Db,
@@ -26,6 +27,19 @@ export function createApp(db: Db) {
 
     const habit = createHabit(db, name.trim());
     res.status(201).json(habit);
+  });
+
+  app.delete('/api/habits/:id', (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'invalid id' });
+    }
+
+    if (!deleteHabit(db, id)) {
+      return res.status(404).json({ error: 'habit not found' });
+    }
+
+    res.status(204).send();
   });
 
   return app;

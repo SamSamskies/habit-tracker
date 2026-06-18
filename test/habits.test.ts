@@ -5,7 +5,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { Habit, HabitWithStats } from '../src/db.ts';
-import { addCompletion, buildHistory, getHabitById } from '../src/db.ts';
+import {
+  addCompletion,
+  buildHistory,
+  getCompletionsForHabit,
+  getHabitById,
+} from '../src/db.ts';
 import { startServer } from '../src/server.ts';
 
 function formatDateLocal(date: Date): string {
@@ -188,5 +193,69 @@ describe('GET /api/habits', () => {
     const enriched = habits.find((h) => h.name === 'Journal');
     assert.ok(enriched);
     assert.equal(enriched.currentStreak, 2);
+  });
+});
+
+describe('DELETE /api/habits/:id', () => {
+  let dbPath: string;
+  let server: Awaited<ReturnType<typeof startServer>>['server'];
+  let client: Awaited<ReturnType<typeof startServer>>['client'];
+  let db: Awaited<ReturnType<typeof startServer>>['db'];
+  let port: number;
+  let baseUrl: string;
+  const today = new Date();
+
+  before(async () => {
+    dbPath = path.join(os.tmpdir(), `habit-tracker-delete-habits-${randomUUID()}.db`);
+    ({ server, client, db, port } = await startServer({ dbPath, port: 0 }));
+    baseUrl = `http://127.0.0.1:${port}`;
+  });
+
+  after(() => {
+    server.close();
+    client.close();
+    fs.unlinkSync(dbPath);
+  });
+
+  it('removes a habit and its completions', async () => {
+    const createResponse = await fetch(`${baseUrl}/api/habits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Exercise' }),
+    });
+    assert.equal(createResponse.status, 201);
+    const habit = (await createResponse.json()) as Habit;
+
+    addCompletion(db, habit.id, formatDateLocal(today));
+    assert.equal(getCompletionsForHabit(db, habit.id).length, 1);
+
+    const deleteResponse = await fetch(`${baseUrl}/api/habits/${habit.id}`, {
+      method: 'DELETE',
+    });
+    assert.equal(deleteResponse.status, 204);
+
+    assert.equal(getHabitById(db, habit.id), undefined);
+    assert.equal(getCompletionsForHabit(db, habit.id).length, 0);
+
+    const listResponse = await fetch(`${baseUrl}/api/habits`);
+    assert.equal(listResponse.status, 200);
+    const habits = (await listResponse.json()) as HabitWithStats[];
+    assert.equal(habits.length, 0);
+  });
+
+  it('returns 404 when the habit does not exist', async () => {
+    const response = await fetch(`${baseUrl}/api/habits/999`, {
+      method: 'DELETE',
+    });
+
+    assert.equal(response.status, 404);
+  });
+
+  it('returns 400 for an invalid id', async () => {
+    const response = await fetch(`${baseUrl}/api/habits/not-a-number`, {
+      method: 'DELETE',
+    });
+
+    assert.equal(response.status, 400);
   });
 });
