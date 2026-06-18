@@ -15,6 +15,13 @@
       "when": 1781806271559,
       "tag": "0001_blue_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781806907871,
+      "tag": "0002_hard_venom",
+      "breakpoints": true
     }
   ]
 }
