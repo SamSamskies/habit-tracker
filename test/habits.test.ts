@@ -259,3 +259,168 @@ describe('DELETE /api/habits/:id', () => {
     assert.equal(response.status, 400);
   });
 });
+
+describe('POST /api/habits/:id/toggle', () => {
+  let dbPath: string;
+  let server: Awaited<ReturnType<typeof startServer>>['server'];
+  let client: Awaited<ReturnType<typeof startServer>>['client'];
+  let db: Awaited<ReturnType<typeof startServer>>['db'];
+  let port: number;
+  let baseUrl: string;
+  const today = new Date();
+
+  before(async () => {
+    dbPath = path.join(os.tmpdir(), `habit-tracker-toggle-habits-${randomUUID()}.db`);
+    ({ server, client, db, port } = await startServer({ dbPath, port: 0 }));
+    baseUrl = `http://127.0.0.1:${port}`;
+  });
+
+  after(() => {
+    server.close();
+    client.close();
+    fs.unlinkSync(dbPath);
+  });
+
+  it('marks today completed when toggled on', async () => {
+    const createResponse = await fetch(`${baseUrl}/api/habits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Exercise' }),
+    });
+    assert.equal(createResponse.status, 201);
+    const habit = (await createResponse.json()) as Habit;
+
+    const todayKey = formatDateLocal(today);
+    const response = await fetch(`${baseUrl}/api/habits/${habit.id}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: todayKey }),
+    });
+
+    assert.equal(response.status, 200);
+
+    const body = (await response.json()) as {
+      habitId: number;
+      date: string;
+      completed: boolean;
+    };
+    assert.deepEqual(body, {
+      habitId: habit.id,
+      date: todayKey,
+      completed: true,
+    });
+
+    const completions = getCompletionsForHabit(db, habit.id);
+    assert.equal(completions.length, 1);
+    assert.equal(completions[0].date, todayKey);
+  });
+
+  it('marks today not completed when toggled off', async () => {
+    const createResponse = await fetch(`${baseUrl}/api/habits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Read' }),
+    });
+    assert.equal(createResponse.status, 201);
+    const habit = (await createResponse.json()) as Habit;
+
+    const todayKey = formatDateLocal(today);
+
+    const onResponse = await fetch(`${baseUrl}/api/habits/${habit.id}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: todayKey }),
+    });
+    assert.equal(onResponse.status, 200);
+    assert.deepEqual(await onResponse.json(), {
+      habitId: habit.id,
+      date: todayKey,
+      completed: true,
+    });
+
+    const offResponse = await fetch(`${baseUrl}/api/habits/${habit.id}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: todayKey }),
+    });
+    assert.equal(offResponse.status, 200);
+    assert.deepEqual(await offResponse.json(), {
+      habitId: habit.id,
+      date: todayKey,
+      completed: false,
+    });
+
+    assert.equal(getCompletionsForHabit(db, habit.id).length, 0);
+  });
+
+  it('toggles a specific date and reflects it in GET /api/habits history', async () => {
+    const createResponse = await fetch(`${baseUrl}/api/habits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Meditate' }),
+    });
+    assert.equal(createResponse.status, 201);
+    const habit = (await createResponse.json()) as Habit;
+
+    const yesterdayKey = formatDateLocal(addDays(today, -1));
+    const response = await fetch(`${baseUrl}/api/habits/${habit.id}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: yesterdayKey }),
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      habitId: habit.id,
+      date: yesterdayKey,
+      completed: true,
+    });
+
+    const listResponse = await fetch(`${baseUrl}/api/habits`);
+    assert.equal(listResponse.status, 200);
+
+    const habits = (await listResponse.json()) as HabitWithStats[];
+    const enriched = habits.find((h) => h.id === habit.id);
+    assert.ok(enriched);
+    assert.equal(enriched.history[yesterdayKey], true);
+    assert.equal(enriched.currentStreak, 1);
+  });
+
+  it('returns 404 when the habit does not exist', async () => {
+    const response = await fetch(`${baseUrl}/api/habits/999/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: formatDateLocal(today) }),
+    });
+
+    assert.equal(response.status, 404);
+  });
+
+  it('returns 400 when date is missing', async () => {
+    const createResponse = await fetch(`${baseUrl}/api/habits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Exercise' }),
+    });
+    assert.equal(createResponse.status, 201);
+    const habit = (await createResponse.json()) as Habit;
+
+    const response = await fetch(`${baseUrl}/api/habits/${habit.id}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+
+    assert.equal(response.status, 400);
+  });
+
+  it('returns 400 for an invalid id', async () => {
+    const response = await fetch(`${baseUrl}/api/habits/not-a-number/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: formatDateLocal(today) }),
+    });
+
+    assert.equal(response.status, 400);
+  });
+});

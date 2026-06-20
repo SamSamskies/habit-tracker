@@ -5,7 +5,9 @@ import {
   initDb,
   createHabit,
   deleteHabit,
+  getHabitById,
   getHabits,
+  toggleCompletion,
   DEFAULT_DB_PATH,
   type Db,
   type DbConnection,
@@ -40,6 +42,25 @@ export function createApp(db: Db) {
     }
 
     res.status(204).send();
+  });
+
+  app.post('/api/habits/:id/toggle', (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'invalid id' });
+    }
+
+    const date = req.body?.date;
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'invalid date' });
+    }
+
+    if (!getHabitById(db, id)) {
+      return res.status(404).json({ error: 'habit not found' });
+    }
+
+    const completed = toggleCompletion(db, id, date);
+    res.json({ habitId: id, date, completed });
   });
 
   return app;

@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import Database from 'better-sqlite3';
@@ -63,7 +63,23 @@ export function addCompletion(db: Db, habitId: number, date: string): void {
   db.insert(completions).values({ habit_id: habitId, date }).run();
 }
 
-function formatDateLocal(date: Date): string {
+export function toggleCompletion(db: Db, habitId: number, date: string): boolean {
+  const existing = db
+    .select()
+    .from(completions)
+    .where(and(eq(completions.habit_id, habitId), eq(completions.date, date)))
+    .get();
+
+  if (existing) {
+    db.delete(completions).where(eq(completions.id, existing.id)).run();
+    return false;
+  }
+
+  db.insert(completions).values({ habit_id: habitId, date }).run();
+  return true;
+}
+
+export function formatDateLocal(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
