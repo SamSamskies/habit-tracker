@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habit Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      color: #1a1a1a;
+      background: #fafafa;
+    }
+
+    h1 {
+      margin: 0 0 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    form {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button.delete {
+      background: transparent;
+      color: #dc2626;
+      padding: 0.25rem 0.5rem;
+    }
+
+    button.delete:hover {
+      background: #fef2f2;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    li label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+      cursor: pointer;
+    }
+
+    li input[type="checkbox"] {
+      width: 1.125rem;
+      height: 1.125rem;
+      cursor: pointer;
+    }
+
+    .streak {
+      font-size: 0.75rem;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    .empty {
+      color: #666;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .error {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Habit Tracker</h1>
+
+  <div id="error" class="error" hidden></div>
+
+  <form id="add-form">
+    <input type="text" id="name-input" placeholder="New habit..." required autocomplete="off">
+    <button type="submit">Add</button>
+  </form>
+
+  <ul id="habit-list"></ul>
+
+  <script>
+    function todayKey() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    const today = todayKey();
+    const listEl = document.getElementById('habit-list');
+    const formEl = document.getElementById('add-form');
+    const nameInput = document.getElementById('name-input');
+    const errorEl = document.getElementById('error');
+
+    function showError(message) {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+    }
+
+    function clearError() {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+
+    async function fetchHabits() {
+      const res = await fetch('/api/habits');
+      if (!res.ok) throw new Error('Failed to load habits');
+      return res.json();
+    }
+
+    function renderHabits(habits) {
+      listEl.innerHTML = '';
+
+      if (habits.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'empty';
+        empty.textContent = 'No habits yet. Add one above.';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      for (const habit of habits) {
+        const li = document.createElement('li');
+
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = habit.history[today] === true;
+        checkbox.addEventListener('change', () => toggleHabit(habit.id, checkbox));
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = habit.name;
+
+        label.appendChild(checkbox);
+        label.appendChild(nameSpan);
+
+        const streak = document.createElement('span');
+        streak.className = 'streak';
+        streak.textContent = habit.currentStreak > 0
+          ? `${habit.currentStreak} day streak`
+          : '';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'delete';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteHabit(habit.id));
+
+        li.appendChild(label);
+        li.appendChild(streak);
+        li.appendChild(deleteBtn);
+        listEl.appendChild(li);
+      }
+    }
+
+    async function load() {
+      clearError();
+      try {
+        const habits = await fetchHabits();
+        renderHabits(habits);
+      } catch {
+        showError('Could not load habits.');
+      }
+    }
+
+    async function toggleHabit(id, checkbox) {
+      clearError();
+      try {
+        const res = await fetch(`/api/habits/${id}/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: today }),
+        });
+        if (!res.ok) throw new Error('Toggle failed');
+        const { completed } = await res.json();
+        checkbox.checked = completed;
+        await load();
+      } catch {
+        checkbox.checked = !checkbox.checked;
+        showError('Could not toggle habit.');
+      }
+    }
+
+    async function deleteHabit(id) {
+      clearError();
+      try {
+        const res = await fetch(`/api/habits/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Delete failed');
+        await load();
+      } catch {
+        showError('Could not delete habit.');
+      }
+    }
+
+    formEl.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      try {
+        const res = await fetch('/api/habits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        });
+        if (!res.ok) throw new Error('Create failed');
+        nameInput.value = '';
+        await load();
+      } catch {
+        showError('Could not add habit.');
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

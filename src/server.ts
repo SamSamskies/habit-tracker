@@ -1,5 +1,6 @@
 import express from 'express';
 import type { Request, Response } from 'express';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   initDb,
@@ -16,6 +17,9 @@ import {
 export function createApp(db: Db) {
   const app = express();
   app.use(express.json());
+
+  const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
+  app.use(express.static(publicDir));
 
   app.get('/api/habits', (_req: Request, res: Response) => {
     res.json(getHabits(db));
