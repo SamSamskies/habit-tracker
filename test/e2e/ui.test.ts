@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { chromium, type Browser, type Page } from 'playwright';
-import { startServer } from '../src/server.ts';
+import { startServer } from '../../src/server.ts';
 
 describe('UI', () => {
   let dbPath: string;
