@@ -2,3 +2,4 @@ node_modules/
 habits.db
 *.db
 .playwright-mcp/
+.cursor/hooks/shell-audit.log
