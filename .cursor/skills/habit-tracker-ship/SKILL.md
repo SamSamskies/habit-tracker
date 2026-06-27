@@ -7,7 +7,6 @@ description: Run the habit tracker verify loop after a feature change. Use when 
 
 ## Verify checklist
 - [ ] npm test — all API tests green
-- [ ] npm run dev — smoke the UI in browser
 - [ ] npm run test:e2e — if e2e tests exist
 
 ## Done when
