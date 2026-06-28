@@ -694,15 +694,21 @@
       });
     }
 
-    async function load() {
+    async function load({ skeleton = false } = {}) {
       clearError();
-      showSkeleton();
+      if (skeleton) {
+        showSkeleton();
+      }
       try {
         const habits = await fetchHabits();
         renderHabits(habits);
       } catch {
-        listEl.innerHTML = '';
-        showError('Could not load habits.');
+        if (skeleton) {
+          listEl.innerHTML = '';
+          showError('Could not load habits.');
+        } else {
+          showError('Could not refresh habits.');
+        }
       }
     }
 
@@ -755,7 +761,7 @@
       }
     });
 
-    load();
+    load({ skeleton: true });
   </script>
 </body>
 </html>
