@@ -1,3 +1,5 @@
 {
+  "name": "habit-tracker",
+  "snapshot": "bc-f7e91579-191b-43a8-8443-94224047bbe8",
   "install": "npm ci"
 }
