@@ -87,4 +87,27 @@ describe('UI', () => {
 
     assert.equal(await page!.locator('#habit-list li').count(), 0);
   });
+
+  it('confirming delete once only removes one habit', async () => {
+    await page!.getByPlaceholder('New habit...').fill('Alpha');
+    await page!.getByRole('button', { name: 'Add' }).click();
+    await page!.locator('#habit-list li', { hasText: 'Alpha' }).waitFor();
+
+    await page!.getByPlaceholder('New habit...').fill('Beta');
+    await page!.getByRole('button', { name: 'Add' }).click();
+    await page!.locator('#habit-list li', { hasText: 'Beta' }).waitFor();
+
+    await page!.evaluate(() => {
+      const buttons = [...document.querySelectorAll('#habit-list .delete')];
+      buttons[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      buttons[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await page!.getByRole('alertdialog').waitFor();
+
+    await page!.getByRole('alertdialog').getByRole('button', { name: 'Delete habit' }).click();
+    await page!.waitForFunction(() => document.querySelectorAll('#habit-list li').length === 1);
+
+    assert.equal(await page!.locator('#habit-list li').count(), 1);
+    assert.ok(await page!.locator('#habit-list li', { hasText: 'Beta' }).isVisible());
+  });
 });

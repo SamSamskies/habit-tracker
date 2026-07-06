@@ -709,12 +709,18 @@
     const deleteDialogDescEl = document.getElementById('delete-dialog-desc');
     const deleteDialogCancelBtn = deleteDialogEl.querySelector('.dialog-cancel');
     const deleteDialogConfirmBtn = deleteDialogEl.querySelector('.dialog-confirm');
+    let deleteDialogResolve = null;
 
     todayDateEl.textContent = formatTodayLabel();
     todayDateEl.dateTime = today;
 
     function confirmDelete(habitName) {
+      if (deleteDialogResolve) {
+        return Promise.resolve(false);
+      }
+
       return new Promise((resolve) => {
+        deleteDialogResolve = resolve;
         deleteDialogDescEl.innerHTML = `<strong>${escapeHtml(habitName)}</strong> will be permanently removed along with its history.`;
 
         function finish(confirmed) {
@@ -723,7 +729,9 @@
           deleteDialogCancelBtn.removeEventListener('click', onCancel);
           deleteDialogConfirmBtn.removeEventListener('click', onConfirm);
           deleteDialogEl.removeEventListener('click', onBackdrop);
-          resolve(confirmed);
+          const resolvePending = deleteDialogResolve;
+          deleteDialogResolve = null;
+          resolvePending(confirmed);
         }
 
         function onCancel() {
