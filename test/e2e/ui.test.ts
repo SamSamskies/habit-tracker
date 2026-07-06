@@ -82,6 +82,7 @@ describe('UI', () => {
     await page!.locator('#habit-list li', { hasText: 'Meditate' }).waitFor();
 
     await page!.getByRole('button', { name: 'Delete' }).click();
+    await page!.getByRole('alertdialog').getByRole('button', { name: 'Delete habit' }).click();
     await page!.getByText('No habits yet. Add one above.').waitFor();
 
     assert.equal(await page!.locator('#habit-list li').count(), 0);
